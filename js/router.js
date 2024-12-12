@@ -7,10 +7,10 @@ const route = (event) => {
 };
 
 const handleLocation = async () => {    
-    var   path = window.location.pathname,
-          part = path.split("/"),
-          tags = "";
-          part = part[part.length - 1].trim();
+    var tags = "",
+        path = window.location.pathname,
+        part = path.split("/"),
+        part = part[part.length - 1].trim();
     const page = part ? part : 'index';
           if(part)
             tags = page.toLowerCase().replace(/\b[a-z]/g, function(letter) {
