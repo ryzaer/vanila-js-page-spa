@@ -31,7 +31,6 @@ hr {
     display: flex;
     flex-direction: column;
     padding: 1rem;
-
     border-right: 1px solid lightgray;
 }
 
@@ -41,8 +40,9 @@ hr {
 
 .page-container {
     display: flex;
+    flex-grow: 1;
+    height: 100%;
     flex-direction: column;
-
     padding: 0 1rem;
 }
 
@@ -75,4 +75,9 @@ hr {
 .socials-card > i {
     font-size: 1.5rem;
     margin-right: 0.5rem;
+}
+
+footer {
+    text-align: center;
+    padding: 1rem;
 }

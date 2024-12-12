@@ -21,8 +21,7 @@ const handleLocation = async () => {
     const urls = part ? path.replace(page, `pages/${page}.html`) : `${path}/pages/index.html`;
     // const route = routes[path] || routes[`${rooter}/404`];
     const html = await fetch(urls).then((data) => data.text());
-
-    document.getElementsByTagName("main").innerHTML = html.split(/<(\/)?template>/ig)[2];
+    document.querySelector("main").innerHTML = html.split(/(\n)?<(\/)?template>(\n)?/ig)[4];
     // console.log(handleHashChange(1));
 };
 

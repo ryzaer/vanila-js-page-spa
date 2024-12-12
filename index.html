@@ -7,15 +7,17 @@
         <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css" rel="stylesheet" />
     </head>
     <body>
-        <header id="root">
-            <nav id="main-nav" class="sidebar">
-                <a href="./" onclick="route()">Home</a>
-                <a href="./about#data-2#dumpling" onclick="route()">About</a>
-                <a href="./lorem#teet" onclick="route()">Lorem</a>
-            </nav>            
-        </header>
-        <main></main>
+        <div id="root">
+            <header>
+                <nav id="main-nav" class="sidebar">
+                    <a href="./" onclick="route()">Home</a>
+                    <a href="about#data-2#dumpling" onclick="route()">About</a>
+                    <a href="lorem#teet" onclick="route()">Lorem</a>
+                </nav>            
+            </header>
+            <main id="main-page" class="page-container"></main>
+        </div>
         <footer>this is a footer</footer>
-        <script src="js/router.js?v=2"></script>
+        <script src="js/router.js?v=3"></script>
     </body>
 </html> 
