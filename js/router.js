@@ -22,7 +22,7 @@ const handleLocation = async () => {
     // const route = routes[path] || routes[`${rooter}/404`];
     const html = await fetch(urls).then((data) => data.text());
 
-    document.getElementById("main-page").innerHTML = html.split(/<(\/)?template>/ig)[2];
+    document.getElementsByTagName("main").innerHTML = html.split(/<(\/)?template>/ig)[2];
     // console.log(handleHashChange(1));
 };
 
