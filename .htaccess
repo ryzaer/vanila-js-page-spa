@@ -1,11 +1,7 @@
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^(.*)$ %{ENV:BASE}index.html?$1 [N,L]
-  
-  <FilesMatch "\.(ini|psd|log|sh|txt)$">
-	Order allow,deny
-	 Deny from all
-  </FilesMatch>
-</IfModule>
+# this not work if htaccess active
+# <IfModule mod_rewrite.c>
+#   RewriteEngine On
+#   RewriteCond %{REQUEST_FILENAME} !-f
+#   RewriteCond %{REQUEST_FILENAME} !-d
+#   RewriteRule ^(.*)$ %{ENV:BASE}index.html?$1 [N,L]
+# </IfModule>
