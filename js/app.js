@@ -1,4 +1,5 @@
 const   siteName = "Vanilla SPA Router",
+        siteBody = "main",
         route = (event) => {
             event = event || window.event;
             event.preventDefault();
@@ -6,15 +7,16 @@ const   siteName = "Vanilla SPA Router",
             handleLocation();
         },
         handleLocation = async () => { 
-            const mainElement = document.querySelector("main");   
+            const mainElement = document.querySelector(siteBody);   
             var tags = "",
                 path = window.location.pathname,
                 part = path.split("/"),
                 part = part[part.length - 1].trim(),
                 page = part ? part : 'index';
-            /** make clear that content is not the same */
+            /** make clear that content is not the same content*/
             if(mainElement.getAttribute("content") !== page){
-                var urls = part ? path.replace(page, `pages/${page}.html`) : `${path}/pages/index.html`,
+                /*var urls = part ? path.replace(page, `pages/${page}.html`) : `${path}/pages/index.html`,*/
+                var urls = part ? path.replace(page, `pages/${page}`) : `${path}/pages/index`,
                     html = await fetch(urls).then((data) => data.text()),
                     htmc;
                 mainElement.setAttribute('content',page);
@@ -24,7 +26,8 @@ const   siteName = "Vanilla SPA Router",
                     page = '404 ' +  page + ' Page Not Found';
                 }
                 htmc = html.split(/(\n)?<(\/)?template>(\n)?/ig)[4];
-                mainElement.innerHTML = htmc;                
+                mainElement.innerHTML = htmc;
+
                 if(part)
                     tags = page.toLowerCase().replace(/\b[a-z]/g, function(letter) {
                         return letter.toUpperCase();
@@ -43,9 +46,11 @@ const   siteName = "Vanilla SPA Router",
         };
 window.onpopstate = handleLocation;
 window.onload = handleLocation;
-window.route = route;
 document.addEventListener('click', function(event) {
-    // Check if the clicked element is an <a> tag
+    
+    /** 
+     Check if the clicked element is an <a> tag
+     * */ 
     const anchor = event.target.closest('a');    
     if (anchor){
         const href = anchor.getAttribute('href');
