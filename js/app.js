@@ -5,6 +5,9 @@ class vanilaSPA {
         this.siteHead = "header",
         this.siteMain = "main",
         this.siteFoot = "footer"
+        
+        window.addEventListener('popstate', this.getPage);
+        window.onload = this.getPage;
     }
     route = (event) => {
         event = event || window.event;
@@ -52,10 +55,9 @@ class vanilaSPA {
         return ints > 1 ? hashData[ints] : hashData[1];
     }
 }
-F3 = new vanilaSPA();
+const F3 = new vanilaSPA();
 console.log(F3.getHash());
-window.onpopstate = F3.getPage;
-window.onload = F3.getPage;
+
 document.addEventListener('click', function(event) {    
     /** Check if the clicked element is an <a> tag */ 
     const anchor = event.target.closest('a');    
