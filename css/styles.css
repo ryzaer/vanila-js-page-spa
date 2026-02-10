@@ -23,12 +23,21 @@ hr {
     display: flex;
     height: 100%;
 }
-
-#main-page {
+.page-container {
     flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 0.5rem;
+}
+footer {
+    text-align: center;
+    padding: 0.5rem;
+}
+.align-center {
+    align-items: center;
 }
 
-.sidebar {
+/* .sidebar {
     display: flex;
     flex-direction: column;
     padding: 1rem;
@@ -37,19 +46,7 @@ hr {
 
 .sidebar > a {
     margin: 0.5rem 0;
-}
-
-.page-container {
-    display: flex;
-    flex-grow: 1;
-    height: 100%;
-    flex-direction: column;
-    padding: 0 1rem;
-}
-
-.align-center {
-    align-items: center;
-}
+    }
 
 .socials-container {
     display: flex;
@@ -76,9 +73,5 @@ hr {
 .socials-card > i {
     font-size: 1.5rem;
     margin-right: 0.5rem;
-}
+} */
 
-footer {
-    text-align: center;
-    padding: 1rem;
-}
