@@ -1,70 +1,150 @@
-class vanilaSPA {
-    constructor() {
-        this.siteName = "Vanila SPA Router",
-        /** default page container header, main, footer */
-        this.siteHead = "header",
-        this.siteMain = "main",
-        this.siteFoot = "footer"
-        
-        window.addEventListener('popstate', this.getPage);
-        window.onload = this.getPage;
-    }
-    route = (event) => {
-        event = event || window.event;
-        event.preventDefault();
-        window.history.pushState({}, "", event.target.href);            
-        this.getPage();
-    }
-    getPage = async () => { 
-        const mainElement = document.querySelector(this.siteMain);   
-        var tags = "",
-            path = window.location.pathname,
-            part = path.split("/"),
-            part = part[part.length - 1].trim(),
-            page = part ? part : 'index';
-        /** make clear that content is not the same content*/
-        if(mainElement.getAttribute("content") !== page){
-            /*var urls = part ? path.replace(page, `pages/${page}.html`) : `${path}/pages/index.html`,*/
-            var urls = part ? path.replace(page, `pages/${page}`) : `${path}/pages/index`,
-                html = await fetch(urls).then((data) => data.text()),
-                htmc;
-            mainElement.setAttribute('content',page);
-            /** handle error page 4** to 5** */
-            if(html.match(/<title>(\s+)?(4|5)\d{1,2}\s/)){
-                html = await fetch(urls.replace(page,'404')).then((data) => data.text());
-                page = '404 ' +  page + ' Page Not Found';
-            }
-            /** parsing html template content */
-            htmc = html.split(/(\n)?<(\/)?template>(\n)?/ig)[4];
-            mainElement.innerHTML = htmc;
-            /** this is handling title */
-            if(part)
-                tags = page.toLowerCase().replace(/\b[a-z]/g, function(letter) {
-                    return letter.toUpperCase();
-                }) + " ~ ";
-            document.title = tags+this.siteName;
-            /** this is handling hashtags */
-            if(this.getHash(1)){
-                var getIDElement = document.getElementById(this.getHash(1));
-                !getIDElement || window.scrollTo(0, getIDElement.offsetTop);
-            }
-        }
-    }
-    getHash = (ints) => {
-        const hashData = window.location.hash.split("#");
-        return ints > 1 ? hashData[ints] : hashData[1];
-    }
-}
-const F3 = new vanilaSPA();
-console.log(F3.getHash());
+(() => {
 
-document.addEventListener('click', function(event) {    
-    /** Check if the clicked element is an <a> tag */ 
-    const anchor = event.target.closest('a');    
-    if (anchor){
-        /** get the href attribute value to check if it starts with # */ 
-        const href = anchor.getAttribute('href');
-        if (anchor.hasAttribute('href') && !anchor.hasAttribute('target') && !href.startsWith('#')) 
-            F3.route(event)
+  /* ================= CONFIG ================= */
+  const CONFIG = {
+    root: document.currentScript.src.replace(/\/[^\/]+$/, ''),
+    mode: location.hostname === 'localhost' ? 'dev' : 'prod'
+  };
+
+  const DEBUG = CONFIG.mode === 'dev';
+  const log = (...a) => DEBUG && console.log('[SPA]', ...a);
+
+  /* ================= LAYOUT MAP ================= */
+  const LAYOUTS = {
+    default: {
+      nav: 'partials/nav-default.html',
+      footer: 'partials/footer.html'
+    },
+    marketing: {
+      nav: 'partials/nav-marketing.html',
+      footer: 'partials/footer.html'
     }
-});
+  };
+
+  const PageCache = new Map();
+  const PartialCache = new Map();
+
+  /* ================= STATE ================= */
+  let currentLayout = null;
+  
+  /* ================= CONTRACT ================= */
+  function isDocumentNavigation(link) {
+    if (!link || !link.href) return false;
+
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#')) return false;
+    if (link.hasAttribute('target')) return false;
+    if (/^https?:\/\//i.test(href)) return false;
+
+    return href.endsWith('.html');
+  }
+
+  /* ================= PARTIAL LOADER ================= */
+  async function loadPartial(selector, url) {
+    const container = document.querySelector(selector);
+    if (!container) return;
+
+    if (container.dataset.source === url) return;
+
+    let html = PartialCache.get(url);
+    if (!html) {
+      const res = await fetch(url);
+      html = await res.text();
+      PartialCache.set(url, html);
+    }
+
+    container.innerHTML = html;
+    container.dataset.source = url;
+  }
+
+  /* ================= LAYOUT APPLIER ================= */
+  async function applyLayout(nextLayout) {
+    if (nextLayout === currentLayout) return;
+
+    currentLayout = nextLayout;
+    const cfg = LAYOUTS[nextLayout];
+    if (!cfg) return;
+
+    await loadPartial('#nav', cfg.nav);
+    await loadPartial('#footer', cfg.footer);
+  }
+
+  /* ================= PAGE LOADER ================= */
+  async function loadPage(path, push = true) {
+    log('loadPage', path);
+
+    if (CONFIG.mode === 'prod' && PageCache.has(path)) {
+      applyPage(PageCache.get(path), push, path);
+      return;
+    }
+
+    try {
+      const res = await fetch(path);
+      if (!res.ok) throw 'fetch failed';
+
+      const html = await res.text();
+      const parsed = parseHTML(html);
+
+      PageCache.set(path, parsed);
+      applyPage(parsed, push, path);
+
+    } catch {
+      location.href = path;
+    }
+  }
+
+  function parseHTML(html) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+
+    return {
+      title: doc.title,
+      content: doc.querySelector('#app').innerHTML,
+      layout: doc.body.dataset.layout || 'default'
+    };
+  }
+
+  async function applyPage(data, push, path) {
+    await applyLayout(data.layout);
+
+    document.querySelector('#app').innerHTML = data.content;
+    document.title = data.title;
+
+    if (push) {
+      history.pushState({}, '', path);
+    }
+  }
+
+  /* ================= PREFETCH ================= */
+  document.addEventListener('mouseover', e => {
+    const link = e.target.closest('a');
+    if (!isDocumentNavigation(link)) return;
+
+    const href = link.getAttribute('href');
+    if (PageCache.has(href)) return;
+
+    fetch(href)
+      .then(r => r.text())
+      .then(html => {
+        PageCache.set(href, parseHTML(html));
+        log('prefetched', href);
+      });
+  });
+
+  /* ================= EVENTS ================= */
+  document.addEventListener('click', e => {
+    const link = e.target.closest('a');
+    if (!isDocumentNavigation(link)) return;
+
+    e.preventDefault();
+    loadPage(link.getAttribute('href'));
+  });
+
+  window.addEventListener('popstate', () => {
+    loadPage(location.pathname, false);
+  });
+
+  /* ================= INIT ================= */
+  const initialLayout = document.body.dataset.layout || 'default';
+  applyLayout(initialLayout);
+
+})();

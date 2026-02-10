@@ -1,7 +1,0 @@
-# this not work if htaccess active
-# <IfModule mod_rewrite.c>
-#   RewriteEngine On
-#   RewriteCond %{REQUEST_FILENAME} !-f
-#   RewriteCond %{REQUEST_FILENAME} !-d
-#   RewriteRule ^(.*)$ %{ENV:BASE}index.html?$1 [N,L]
-# </IfModule>
