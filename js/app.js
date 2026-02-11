@@ -27,40 +27,51 @@
   /* ================= STATE ================= */
   let currentLayout = null;
   
-  /* ================= CONTRACT ================= */
+  /* ================= CONTRACT abaikan selain html ================= */
   function isDocumentNavigation(link) {
-    if (!link || !link.href) return false;
+      if (!(link instanceof HTMLAnchorElement)) return false;
 
-    const href = link.getAttribute('href');
-    if (!href || href.startsWith('#')) return false;
-    if (link.hasAttribute('target')) return false;
-    if (/^https?:\/\//i.test(href)) return false;
+      // abaikan target / download
+      if (link.target && link.target !== '_self') return false;
+      if (link.hasAttribute('download')) return false;
 
-    return href.endsWith('.html');
+      const href = link.getAttribute('href');
+      if (!href) return false;
+
+      // abaikan skema khusus
+      if (/^(mailto|tel|javascript):/i.test(href)) return false;
+
+      // abaikan hash-only
+      if (href.startsWith('#')) return false;
+
+      const url = new URL(link.href, location.origin);
+
+      // abaikan external
+      if (url.origin !== location.origin) return false;
+
+      // abaikan asset non-dokumen
+      if (/\.(css|js|json|png|jpe?g|gif|svg|webp|ico|pdf|zip|rar)$/i.test(url.pathname)) {
+          return false;
+      }
+
+      return true;
   }
 
-  function normalizePath(path) {
-    // buang query & hash (kalau ada)
-    path = path.split('?')[0].split('#')[0];
-
-    // ambil nama file
+  function normalizePath(href) {
+    const url = new URL(href, location.origin);
+    const path = url.pathname;
     const file = path.split('/').pop();
 
-    // semua bentuk index → root
-    if (
-      file === '' ||
-      file === 'index' ||
-      file === 'index.html'
-    ) {
+    // index normalization
+    if (file === '' || file === 'index' || file === 'index.html') {
       return {
         fetch: 'index.html',
-        url: '/'
+        url: '/' + url.search
       };
     }
-
     return {
       fetch: path,
-      url: path
+      url: path + url.search
     };
   }
 
