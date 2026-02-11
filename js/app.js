@@ -39,6 +39,31 @@
     return href.endsWith('.html');
   }
 
+  function normalizePath(path) {
+    // buang query & hash (kalau ada)
+    path = path.split('?')[0].split('#')[0];
+
+    // ambil nama file
+    const file = path.split('/').pop();
+
+    // semua bentuk index → root
+    if (
+      file === '' ||
+      file === 'index' ||
+      file === 'index.html'
+    ) {
+      return {
+        fetch: 'index.html',
+        url: '/'
+      };
+    }
+
+    return {
+      fetch: path,
+      url: path
+    };
+  }
+
   /* ================= PARTIAL LOADER ================= */
   async function loadPartial(selector, url) {
     const container = document.querySelector(selector);
@@ -70,28 +95,29 @@
   }
 
   /* ================= PAGE LOADER ================= */
-  async function loadPage(path, push = true) {
-    log('loadPage', path);
+  async function loadPage(fetchPath, push = true, urlPath = fetchPath) {
+    log('loadPage', fetchPath);
 
-    if (CONFIG.mode === 'prod' && PageCache.has(path)) {
-      applyPage(PageCache.get(path), push, path);
+    if (CONFIG.mode === 'prod' && PageCache.has(fetchPath)) {
+      applyPage(PageCache.get(fetchPath), push, urlPath);
       return;
     }
 
     try {
-      const res = await fetch(path);
+      const res = await fetch(fetchPath);
       if (!res.ok) throw 'fetch failed';
 
       const html = await res.text();
       const parsed = parseHTML(html);
 
-      PageCache.set(path, parsed);
-      applyPage(parsed, push, path);
+      PageCache.set(fetchPath, parsed);
+      applyPage(parsed, push, urlPath);
 
     } catch {
-      location.href = path;
+      location.href = fetchPath;
     }
   }
+
 
   function parseHTML(html) {
     const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -103,14 +129,14 @@
     };
   }
 
-  async function applyPage(data, push, path) {
+  async function applyPage(data, push, urlPath) {
     await applyLayout(data.layout);
 
     document.querySelector('#app').innerHTML = data.content;
     document.title = data.title;
 
     if (push) {
-      history.pushState({}, '', path);
+      history.pushState({}, data.title, urlPath);
     }
   }
 
@@ -136,7 +162,8 @@
     if (!isDocumentNavigation(link)) return;
 
     e.preventDefault();
-    loadPage(link.getAttribute('href'));
+    const target = normalizePath(link.getAttribute('href'));
+    loadPage(target.fetch, true, target.url);
   });
 
   window.addEventListener('popstate', () => {
