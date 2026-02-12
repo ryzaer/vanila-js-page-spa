@@ -25,7 +25,7 @@ vanila-js-page-spa/
 ✔ Mudah migrasi ke PHP / Laravel / SSR
 ✔ Bisa hidup lama tanpa refactor besar
 ```
-### Custom URL REWRITE 
+### Custom REWRITE RULE
 ```
 /index.html → /index
 /about.html → /about
