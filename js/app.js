@@ -50,7 +50,7 @@
       if (url.origin !== location.origin) return false;
 
       // abaikan asset non-dokumen
-      if (/\.(css|js?on|png|jp(eg|g|x)|gif|mp(3|4|eg)|svg|webp|ico|pdf|zip|rar)$/i.test(url.pathname)) {
+      if (/\.(css|json|png|jpe?g|gif|mp3|mp4|webm|svg|webp|ico|pdf|zip|rar|woff2?|ttf|eot|wasm)$/i.test(url.pathname)) {
           return false;
       }
 
