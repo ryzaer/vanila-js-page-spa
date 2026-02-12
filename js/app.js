@@ -109,31 +109,21 @@
   async function loadError(status, push, urlPath) {
     const errorPath = 'error.html';
 
-    // cache error page juga
-    if (PageCache.has(errorPath)) {
-      applyPage(PageCache.get(errorPath), push, urlPath, () => {
-        renderError(status);
-      });
-      return;
-    }
+    let parsed;
 
-    try {
+    if (PageCache.has(errorPath)) {
+      parsed = PageCache.get(errorPath);
+    } else {
       const res = await fetch(errorPath);
-      if (!res.ok) throw 'error page missing';
+      if (!res.ok) return location.href = errorPath;
 
       const html = await res.text();
-      const parsed = parseHTML(html);
-
+      parsed = parseHTML(html);
       PageCache.set(errorPath, parsed);
-
-      applyPage(parsed, push, urlPath, () => {
-        renderError(status);
-      });
-
-    } catch {
-      // fallback TERAKHIR
-      location.href = errorPath;
     }
+
+    await applyPage(parsed, push, urlPath);
+    renderError(status);
   }
 
   function renderError(code) {
@@ -149,32 +139,9 @@
     document.getElementById('err-code').textContent = title;
     document.getElementById('err-message').textContent = msg;
 
-    document.title = `${title} | My App`;
+    document.title = `${title} | ${msg}`;
   }
   /* ================= PAGE LOADER ================= */
-  // async function loadPage(fetchPath, push = true, urlPath = fetchPath) {
-  //   log('loadPage', fetchPath);
-
-  //   if (CONFIG.mode === 'prod' && PageCache.has(fetchPath)) {
-  //     applyPage(PageCache.get(fetchPath), push, urlPath);
-  //     return;
-  //   }
-
-  //   try {
-  //     const res = await fetch(fetchPath);
-  //     if (!res.ok) throw 'fetch failed';
-
-  //     const html = await res.text();
-  //     const parsed = parseHTML(html);
-
-  //     PageCache.set(fetchPath, parsed);
-  //     applyPage(parsed, push, urlPath);
-
-  //   } catch {
-  //     location.href = fetchPath;
-  //   }
-  // }
-
   async function loadPage(fetchPath, push = true, urlPath = fetchPath) {
     log('loadPage', fetchPath);
 
@@ -200,6 +167,7 @@
     } catch (err) {
       // network / offline
       return loadError(0, push, urlPath);
+
     }
   }
 
