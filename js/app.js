@@ -107,7 +107,7 @@
 
   /* ================= REFETCH ERROR ================= */
   async function loadError(status, push, urlPath) {
-    const errorPath = 'error.html';
+    const errorPath = 'partials/error.html';
 
     let parsed;
 
