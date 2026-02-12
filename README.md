@@ -40,19 +40,25 @@ server {
     root /var/www/html;
     index index.html;
 
-    # ROOT
+    # =========================
+    # 1. ROOT
+    # =========================
     location = / {
         try_files /index.html =404;
     }
 
-    # REMOVE .html / .php FROM URL (BROWSER ONLY)
+    # =========================
+    # 2. HAPUS .html / .php DARI URL (BROWSER ONLY)
+    # =========================
     location ~ ^/(.+)\.(html|php)$ {
         return 302 /$1$is_args$args;
     }
 
-    # SPA ROUTE HANDLER
+    # =========================
+    # 3. FILE & FOLDER ASLI
+    # =========================
     location / {
-        try_files $uri $uri.html /index.html;
+        try_files $uri $uri.html =404;
     }
 
     # PHP (jika pakai PHP-FPM)
@@ -65,4 +71,27 @@ server {
 ```
 #### .htaccess
 ```
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# 1. Root
+RewriteRule ^$ index.html [L]
+
+# 2. Hapus .html / .php dari URL browser
+# R=302 Dev , R=301 Prod
+RewriteCond %{THE_REQUEST} \s/+(.*?)(?:\.html|\.php)([\s?])
+RewriteRule ^ %1%2 [R=302,L]
+
+# 3. File & folder asli → langsung
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 4. Route SPA → file html jika ADA
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+)$ $1.html [L]
+
+# ❌ TIDAK ADA fallback ke index.html di sini
+</IfModule>
+
 ```

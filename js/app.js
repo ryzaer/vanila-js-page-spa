@@ -50,7 +50,7 @@
       if (url.origin !== location.origin) return false;
 
       // abaikan asset non-dokumen
-      if (/\.(css|js|json|png|jpe?g|gif|svg|webp|ico|pdf|zip|rar)$/i.test(url.pathname)) {
+      if (/\.(css|js?on|png|jp(eg|g|x)|gif|mp(3|4|eg)|svg|webp|ico|pdf|zip|rar)$/i.test(url.pathname)) {
           return false;
       }
 
@@ -105,10 +105,80 @@
     await loadPartial('#footer', cfg.footer);
   }
 
+  /* ================= REFETCH ERROR ================= */
+  async function loadError(status, push, urlPath) {
+    const errorPath = 'error.html';
+
+    // cache error page juga
+    if (PageCache.has(errorPath)) {
+      applyPage(PageCache.get(errorPath), push, urlPath, () => {
+        renderError(status);
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch(errorPath);
+      if (!res.ok) throw 'error page missing';
+
+      const html = await res.text();
+      const parsed = parseHTML(html);
+
+      PageCache.set(errorPath, parsed);
+
+      applyPage(parsed, push, urlPath, () => {
+        renderError(status);
+      });
+
+    } catch {
+      // fallback TERAKHIR
+      location.href = errorPath;
+    }
+  }
+
+  function renderError(code) {
+    const map = {
+      404: ['404', 'Halaman tidak ditemukan'],
+      500: ['500', 'Kesalahan server'],
+      403: ['403', 'Akses ditolak'],
+      0:   ['Offline', 'Tidak dapat terhubung ke server']
+    };
+
+    const [title, msg] = map[code] || [code, 'Terjadi kesalahan'];
+
+    document.getElementById('err-code').textContent = title;
+    document.getElementById('err-message').textContent = msg;
+
+    document.title = `${title} | My App`;
+  }
   /* ================= PAGE LOADER ================= */
+  // async function loadPage(fetchPath, push = true, urlPath = fetchPath) {
+  //   log('loadPage', fetchPath);
+
+  //   if (CONFIG.mode === 'prod' && PageCache.has(fetchPath)) {
+  //     applyPage(PageCache.get(fetchPath), push, urlPath);
+  //     return;
+  //   }
+
+  //   try {
+  //     const res = await fetch(fetchPath);
+  //     if (!res.ok) throw 'fetch failed';
+
+  //     const html = await res.text();
+  //     const parsed = parseHTML(html);
+
+  //     PageCache.set(fetchPath, parsed);
+  //     applyPage(parsed, push, urlPath);
+
+  //   } catch {
+  //     location.href = fetchPath;
+  //   }
+  // }
+
   async function loadPage(fetchPath, push = true, urlPath = fetchPath) {
     log('loadPage', fetchPath);
 
+    // 1️⃣ cache hit
     if (CONFIG.mode === 'prod' && PageCache.has(fetchPath)) {
       applyPage(PageCache.get(fetchPath), push, urlPath);
       return;
@@ -116,7 +186,10 @@
 
     try {
       const res = await fetch(fetchPath);
-      if (!res.ok) throw 'fetch failed';
+
+      if (!res.ok) {
+        return loadError(res.status, push, urlPath);
+      }
 
       const html = await res.text();
       const parsed = parseHTML(html);
@@ -124,11 +197,11 @@
       PageCache.set(fetchPath, parsed);
       applyPage(parsed, push, urlPath);
 
-    } catch {
-      location.href = fetchPath;
+    } catch (err) {
+      // network / offline
+      return loadError(0, push, urlPath);
     }
   }
-
 
   function parseHTML(html) {
     const doc = new DOMParser().parseFromString(html, 'text/html');
