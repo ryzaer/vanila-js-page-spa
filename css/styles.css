@@ -20,7 +20,7 @@ hr {
 }
 
 #root {
-    min-height: calc(100vh - 6.47rem);
+    min-height: calc(100vh - 6.6rem);
 }
 .page-container {
     flex-grow: 1;
